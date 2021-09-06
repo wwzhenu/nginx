@@ -179,19 +179,21 @@ ngx_module_t  ngx_core_module = {
 };
 
 
-static ngx_uint_t   ngx_show_help;
-static ngx_uint_t   ngx_show_version;
-static ngx_uint_t   ngx_show_configure;
-static u_char      *ngx_prefix;
-static u_char      *ngx_error_log;
-static u_char      *ngx_conf_file;
-static u_char      *ngx_conf_params;
-static char        *ngx_signal;
+static ngx_uint_t   ngx_show_help; // 是否显示帮助信息
+static ngx_uint_t   ngx_show_version; // 是否显示版本号
+static ngx_uint_t   ngx_show_configure; // 是否显示配置信息
+static u_char      *ngx_prefix; // Nginx的工作目录
+static u_char      *ngx_error_log; // error日志目录
+static u_char      *ngx_conf_file; // 全局配置文件目录地址
+static u_char      *ngx_conf_params; // 配置参数
+static char        *ngx_signal; // 思念好
 
 
 static char **ngx_os_environ;
 
-
+/**
+ * ngx_cdecl 预留以后平台移植时的其它选项的定义
+ */ 
 int ngx_cdecl
 main(int argc, char *const *argv)
 {
@@ -896,7 +898,9 @@ ngx_get_options(int argc, char *const *argv)
     return NGX_OK;
 }
 
-
+/**
+ * 保存Nginx命令行中的参数和变量放到全局变量ngx_argv
+ */
 static ngx_int_t
 ngx_save_argv(ngx_cycle_t *cycle, int argc, char *const *argv)
 {
@@ -938,7 +942,9 @@ ngx_save_argv(ngx_cycle_t *cycle, int argc, char *const *argv)
     return NGX_OK;
 }
 
-
+/**
+ * 将ngx_get_options中获得这些参数取值赋值到ngx_cycle中
+ */ 
 static ngx_int_t
 ngx_process_options(ngx_cycle_t *cycle)
 {
