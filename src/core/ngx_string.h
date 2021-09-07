@@ -12,13 +12,17 @@
 #include <ngx_config.h>
 #include <ngx_core.h>
 
-
+/**
+ * 字符串结构
+ */ 
 typedef struct {
-    size_t      len;
-    u_char     *data;
+    size_t      len; // 字符串长度
+    u_char     *data; // 具体的指针地址
 } ngx_str_t;
 
-
+/**
+ * 字符串的K V结构
+ */ 
 typedef struct {
     ngx_str_t   key;
     ngx_str_t   value;
@@ -37,11 +41,11 @@ typedef struct {
 } ngx_variable_value_t;
 
 
-#define ngx_string(str)     { sizeof(str) - 1, (u_char *) str }
-#define ngx_null_string     { 0, NULL }
-#define ngx_str_set(str, text)                                               \
-    (str)->len = sizeof(text) - 1; (str)->data = (u_char *) text
-#define ngx_str_null(str)   (str)->len = 0; (str)->data = NULL
+#define ngx_string(str)     { sizeof(str) - 1, (u_char *) str } // 初始化一个字符串
+#define ngx_null_string     { 0, NULL } // 获取NULL字符串
+#define ngx_str_set(str, text)                                                \
+    (str)->len = sizeof(text) - 1; (str)->data = (u_char *) text // 设置一个字符串
+#define ngx_str_null(str)   (str)->len = 0; (str)->data = NULL // 设置一个字符串为null
 
 
 #define ngx_tolower(c)      (u_char) ((c >= 'A' && c <= 'Z') ? (c | 0x20) : c)

@@ -12,26 +12,37 @@
 #include <ngx_config.h>
 #include <ngx_core.h>
 
+//  nginx中的哈希表一个特别之处在于, 这个hash表是静态只读的，即不能在运行时动态添加新元素的，一切的结构和数据都在配置初始化的时候就已经规划完毕
 
+/**
+ * 存储hash的元素
+ */ 
 typedef struct {
-    void             *value;
-    u_short           len;
-    u_char            name[1];
+    void             *value; // 指向value的指针
+    u_short           len; // key的长度
+    u_char            name[1]; // 柔性数组，一个字节的u_char数组，指向key的第一个地址，key长度为变长 搜索 0或1长度数组
 } ngx_hash_elt_t;
 
-
+/**
+ * 基本哈希表结构
+ */ 
 typedef struct {
-    ngx_hash_elt_t  **buckets;
-    ngx_uint_t        size;
+    ngx_hash_elt_t  **buckets; // 第一个槽的地址
+    ngx_uint_t        size; // 槽的总个数
 } ngx_hash_t;
 
-
+/**
+ * 支持通配符的哈希表机构
+ * 用于表示前置或后置通配符的哈希表 如*.test.com www.test.*
+ */ 
 typedef struct {
     ngx_hash_t        hash;
     void             *value;
 } ngx_hash_wildcard_t;
 
-
+/**
+ * 
+ */ 
 typedef struct {
     ngx_str_t         key;
     ngx_uint_t        key_hash;
@@ -43,22 +54,22 @@ typedef ngx_uint_t (*ngx_hash_key_pt) (u_char *data, size_t len);
 
 
 typedef struct {
-    ngx_hash_t            hash;
-    ngx_hash_wildcard_t  *wc_head;
-    ngx_hash_wildcard_t  *wc_tail;
+    ngx_hash_t            hash; // 普通hash
+    ngx_hash_wildcard_t  *wc_head; // 向前通配符hash
+    ngx_hash_wildcard_t  *wc_tail; // 向后通配符hash
 } ngx_hash_combined_t;
 
 
 typedef struct {
-    ngx_hash_t       *hash;
-    ngx_hash_key_pt   key;
+    ngx_hash_t       *hash; // 指向普通的完全匹配哈希表
+    ngx_hash_key_pt   key; // 哈希方法
 
-    ngx_uint_t        max_size;
-    ngx_uint_t        bucket_size;
+    ngx_uint_t        max_size; // 哈希表中槽的最大个数
+    ngx_uint_t        bucket_size; // 哈希表中一个槽的空间大小，不是sizeof(ngx_hash_elt_t)
 
-    char             *name;
-    ngx_pool_t       *pool;
-    ngx_pool_t       *temp_pool;
+    char             *name; // 哈希表的名称
+    ngx_pool_t       *pool; // 内存池，负责分配基本哈希列表、前置通配哈希列表、后置哈希列表中所有槽
+    ngx_pool_t       *temp_pool; // 临时内存池，它仅存在初始化哈希表之前。用于分配一些临时的动态数组，带通配符的元素初始化时需要用到临时动态数组
 } ngx_hash_init_t;
 
 

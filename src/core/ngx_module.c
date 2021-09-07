@@ -21,7 +21,9 @@ static ngx_uint_t ngx_module_ctx_index(ngx_cycle_t *cycle, ngx_uint_t type,
 ngx_uint_t         ngx_max_module;
 static ngx_uint_t  ngx_modules_n;
 
-
+/**
+ * 初始化所有模块，并对所有模块进行编号处理
+ */ 
 ngx_int_t
 ngx_preinit_modules(void)
 {

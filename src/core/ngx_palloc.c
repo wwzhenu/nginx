@@ -14,7 +14,9 @@ static ngx_inline void *ngx_palloc_small(ngx_pool_t *pool, size_t size,
 static void *ngx_palloc_block(ngx_pool_t *pool, size_t size);
 static void *ngx_palloc_large(ngx_pool_t *pool, size_t size);
 
-
+/**
+ * 创建一个内存池
+ */ 
 ngx_pool_t *
 ngx_create_pool(size_t size, ngx_log_t *log)
 {
@@ -24,7 +26,12 @@ ngx_create_pool(size_t size, ngx_log_t *log)
     if (p == NULL) {
         return NULL;
     }
-
+    /**
+	 * Nginx会分配一块大内存，其中内存头部存放ngx_pool_t本身内存池的数据结构
+	 * ngx_pool_data_t	p->d 存放内存池的数据部分（适合小于p->max的内存块存储）
+	 * p->large 存放大内存块列表
+	 * p->cleanup 存放可以被回调函数清理的内存块（该内存块不一定会在内存池上面分配）
+	 */
     p->d.last = (u_char *) p + sizeof(ngx_pool_t);
     p->d.end = (u_char *) p + size;
     p->d.next = NULL;
