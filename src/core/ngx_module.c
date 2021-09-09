@@ -40,7 +40,10 @@ ngx_preinit_modules(void)
     return NGX_OK;
 }
 
-
+/**
+ * ngx_init_cycle 在初始化cycle的时候，初始化模块
+ * 创建一个列表，并将静态的模块拷贝到列表上
+ */ 
 ngx_int_t
 ngx_cycle_modules(ngx_cycle_t *cycle)
 {
@@ -63,7 +66,10 @@ ngx_cycle_modules(ngx_cycle_t *cycle)
     return NGX_OK;
 }
 
-
+/**
+ * 对每个模块进行一次初始化操作
+ * 调用 init_module 回调函数，初始化每个模块的数据
+ */ 
 ngx_int_t
 ngx_init_modules(ngx_cycle_t *cycle)
 {
@@ -80,7 +86,9 @@ ngx_init_modules(ngx_cycle_t *cycle)
     return NGX_OK;
 }
 
-
+/**
+ * 统计每个类型下面总共多少个模块
+ */ 
 ngx_int_t
 ngx_count_modules(ngx_cycle_t *cycle, ngx_uint_t type)
 {

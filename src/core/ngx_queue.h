@@ -20,16 +20,16 @@ struct ngx_queue_s {
     ngx_queue_t  *next;
 };
 
-
+// 初始化链表
 #define ngx_queue_init(q)                                                     \
     (q)->prev = q;                                                            \
     (q)->next = q
 
-
+// 判断是否为空
 #define ngx_queue_empty(h)                                                    \
     (h == (h)->prev)
 
-
+//在H后插入X
 #define ngx_queue_insert_head(h, x)                                           \
     (x)->next = (h)->next;                                                    \
     (x)->next->prev = x;                                                      \
@@ -39,18 +39,18 @@ struct ngx_queue_s {
 
 #define ngx_queue_insert_after   ngx_queue_insert_head
 
-
+// 在H前插入X
 #define ngx_queue_insert_tail(h, x)                                           \
     (x)->prev = (h)->prev;                                                    \
     (x)->prev->next = x;                                                      \
     (x)->next = h;                                                            \
     (h)->prev = x
 
-
+// 获取H下一个元素
 #define ngx_queue_head(h)                                                     \
     (h)->next
 
-
+// 获取H前一个元素
 #define ngx_queue_last(h)                                                     \
     (h)->prev
 

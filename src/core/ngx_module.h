@@ -218,31 +218,33 @@
 
 #define NGX_MODULE_V1_PADDING  0, 0, 0, 0, 0, 0, 0, 0
 
-
+/**
+ * 模块数据结构
+ */ 
 struct ngx_module_s {
     ngx_uint_t            ctx_index;
-    ngx_uint_t            index;
+    ngx_uint_t            index; // 模块唯一标识符
 
-    char                 *name;
+    char                 *name; // 模块名称
 
     ngx_uint_t            spare0;
     ngx_uint_t            spare1;
 
-    ngx_uint_t            version;
+    ngx_uint_t            version; // 模块版本
     const char           *signature;
 
-    void                 *ctx;
-    ngx_command_t        *commands;
-    ngx_uint_t            type;
+    void                 *ctx; // 上下文
+    ngx_command_t        *commands; // 支持的命令集
+    ngx_uint_t            type; // 模块类型
 
-    ngx_int_t           (*init_master)(ngx_log_t *log);
+    ngx_int_t           (*init_master)(ngx_log_t *log); // 主进程初始化时候调用的回调函数
 
-    ngx_int_t           (*init_module)(ngx_cycle_t *cycle);
+    ngx_int_t           (*init_module)(ngx_cycle_t *cycle); // 模块初始化时候调用的回调函数
 
-    ngx_int_t           (*init_process)(ngx_cycle_t *cycle);
-    ngx_int_t           (*init_thread)(ngx_cycle_t *cycle);
-    void                (*exit_thread)(ngx_cycle_t *cycle);
-    void                (*exit_process)(ngx_cycle_t *cycle);
+    ngx_int_t           (*init_process)(ngx_cycle_t *cycle); // 工作进程初始化时候滴啊用的回调函数
+    ngx_int_t           (*init_thread)(ngx_cycle_t *cycle); // 线程初始化调用
+    void                (*exit_thread)(ngx_cycle_t *cycle); // 线程退出调用
+    void                (*exit_process)(ngx_cycle_t *cycle); // 工作进程退出调用
 
     void                (*exit_master)(ngx_cycle_t *cycle);
 
@@ -256,7 +258,9 @@ struct ngx_module_s {
     uintptr_t             spare_hook7;
 };
 
-
+/**
+ * 核心模块数据结构
+ */ 
 typedef struct {
     ngx_str_t             name;
     void               *(*create_conf)(ngx_cycle_t *cycle);

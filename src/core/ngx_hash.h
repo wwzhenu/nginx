@@ -59,7 +59,10 @@ typedef struct {
     ngx_hash_wildcard_t  *wc_tail; // 向后通配符hash
 } ngx_hash_combined_t;
 
-
+/**
+ * 用于初始化哈希表，初始化哈希表的槽的总数并不是由max_size成员决定的，
+ * 而是由在做初始化时预先加入到哈希表的所有元素决定的，包括这些元素的总数、每个元素的关键字长度等，还包括操作系统的页面大小
+ */ 
 typedef struct {
     ngx_hash_t       *hash; // 指向普通的完全匹配哈希表
     ngx_hash_key_pt   key; // 哈希方法
@@ -82,21 +85,25 @@ typedef struct {
 #define NGX_HASH_WILDCARD_KEY     1
 #define NGX_HASH_READONLY_KEY     2
 
-
+/**
+ * 这里设计了3个简易的哈希列表( keys_hash、dns_wc_head_hash、dns_wc_tail_hash)，即采用分离链表法来解决冲突，
+ * 这样做的好处是如果没有这三个分离链表法来解决冲突的建议哈希列表，
+ * 那么每添加一个关键字元素都要遍历数组（数组采用开放地址法解决冲突，冲突就必须遍历）
+ */ 
 typedef struct {
-    ngx_uint_t        hsize;
+    ngx_uint_t        hsize; // 散列中槽总数
 
-    ngx_pool_t       *pool;
-    ngx_pool_t       *temp_pool;
+    ngx_pool_t       *pool; // 内存池，用于分配永久性的内存
+    ngx_pool_t       *temp_pool; // 临时内存池，下面的临时动态数组都是由临时内存池分配
 
-    ngx_array_t       keys;
-    ngx_array_t      *keys_hash;
+    ngx_array_t       keys; // 存放所有非通配符key的数组 
+    ngx_array_t      *keys_hash; // 这是个二维数组，第一个维度代表的是bucket的编号，那么keys_hash[i]中存放的是所有的key算出来的hash值对hsize取模以后的值为i的key。假设有3个key,分别是key1,key2和key3假设hash值算出来以后对hsize取模的值都是i，那么这三个key的值就顺序存放在keys_hash[i][0],keys_hash[i][1], keys_hash[i][2]。该值在调用的过程中用来保存和检测是否有冲突的key值，也就是是否有重复。
 
-    ngx_array_t       dns_wc_head;
-    ngx_array_t      *dns_wc_head_hash;
+    ngx_array_t       dns_wc_head; // 存放前向通配符key被处理完成以后的值。比如：“*.abc.com”被处理完成以后，变成“com.abc.”被存放在此数组中。
+    ngx_array_t      *dns_wc_head_hash;// 该值在调用的过程中用来保存和检测是否有冲突的前向通配符的key值，也就是是否有重复。
 
-    ngx_array_t       dns_wc_tail;
-    ngx_array_t      *dns_wc_tail_hash;
+    ngx_array_t       dns_wc_tail; // 存放后向通配符key被处理完成以后的值。比如：“mail.xxx.*”被处理完成以后，变成“mail.xxx.”被存放在此数组中。
+    ngx_array_t      *dns_wc_tail_hash; // 该值在调用的过程中用来保存和检测是否有冲突的后向通配符的key值，也就是是否有重复
 } ngx_hash_keys_arrays_t;
 
 

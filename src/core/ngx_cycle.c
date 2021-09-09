@@ -221,13 +221,16 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
 
     ngx_strlow(cycle->hostname.data, (u_char *) hostname, cycle->hostname.len);
 
-
+    // 创建模块以及创建模块的配置信息
     if (ngx_cycle_modules(cycle) != NGX_OK) {
         ngx_destroy_pool(pool);
         return NULL;
     }
 
-
+    /*
+     * 核心模块的配置文件创建
+     * 配置创建调用nginx.c 中的 ngx_core_module_create_conf
+     */
     for (i = 0; cycle->modules[i]; i++) {
         if (cycle->modules[i]->type != NGX_CORE_MODULE) {
             continue;
@@ -236,6 +239,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
         module = cycle->modules[i]->ctx;
 
         if (module->create_conf) {
+            // 模块回调函数，创建模块的配置信息
             rv = module->create_conf(cycle);
             if (rv == NULL) {
                 ngx_destroy_pool(pool);
@@ -248,7 +252,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
 
     senv = environ;
 
-
+    // 解析配置文件
     ngx_memzero(&conf, sizeof(ngx_conf_t));
     /* STUB: init array ? */
     conf.args = ngx_array_create(pool, 10, sizeof(ngx_str_t));
@@ -256,7 +260,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
         ngx_destroy_pool(pool);
         return NULL;
     }
-
+    // 创建一个临时的内存池，后面会清空掉;conf也主要用于解析配置文件的临时变量
     conf.temp_pool = ngx_create_pool(NGX_CYCLE_POOL_SIZE, log);
     if (conf.temp_pool == NULL) {
         ngx_destroy_pool(pool);
@@ -274,13 +278,13 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
 #if 0
     log->log_level = NGX_LOG_DEBUG_ALL;
 #endif
-
+    // 解析命令行中的配置参数；例如：nginx -t -c /usr/local/nginx/conf/nginx.conf
     if (ngx_conf_param(&conf) != NGX_CONF_OK) {
         environ = senv;
         ngx_destroy_cycle_pools(&conf);
         return NULL;
     }
-
+    // 解析配置文件/usr/local/nginx/conf/nginx.conf 信息
     if (ngx_conf_parse(&conf, &cycle->conf_file) != NGX_CONF_OK) {
         environ = senv;
         ngx_destroy_cycle_pools(&conf);
@@ -316,7 +320,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
     }
 
     ccf = (ngx_core_conf_t *) ngx_get_conf(cycle->conf_ctx, ngx_core_module);
-
+    // 创建pid文件
     if (ngx_test_config) {
 
         if (ngx_create_pidfile(&ccf->pid, log) != NGX_OK) {
@@ -355,13 +359,13 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
         goto failed;
     }
 
-
+    // 打开日志，并调用ngx_conf_open_file方法，会将打开的文件放到cycle->open_files链表中 主要是日志文件和配置文件
     if (ngx_log_open_default(cycle) != NGX_OK) {
         goto failed;
     }
 
     /* open the new files */
-
+    // 遍历cycle->open_files链表中的文件，并打开
     part = &cycle->open_files.part;
     file = part->elts;
 
@@ -411,7 +415,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
 
 
     /* create shared memory */
-
+    // 创建共享内存并初始化
     part = &cycle->shared_memory.part;
     shm_zone = part->elts;
 
@@ -501,7 +505,7 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
 
 
     /* handle the listening sockets */
-
+    // 处理listening数组，并开始监听socket
     if (old_cycle->listening.nelts) {
         ls = old_cycle->listening.elts;
         for (i = 0; i < old_cycle->listening.nelts; i++) {
@@ -641,7 +645,9 @@ ngx_init_cycle(ngx_cycle_t *old_cycle)
     /* close and delete stuff that lefts from an old cycle */
 
     /* free the unnecessary shared memory */
-
+    // 释放多余的共享内存
+    // 关闭多余的侦听sockets
+    // 关闭多余的打开文件
     opart = &old_cycle->shared_memory.part;
     oshm_zone = opart->elts;
 
@@ -1078,7 +1084,9 @@ ngx_delete_pidfile(ngx_cycle_t *cycle)
     }
 }
 
-
+/**
+ * 处理信号
+ */ 
 ngx_int_t
 ngx_signal_process(ngx_cycle_t *cycle, char *sig)
 {
@@ -1096,7 +1104,7 @@ ngx_signal_process(ngx_cycle_t *cycle, char *sig)
 
     file.name = ccf->pid;
     file.log = cycle->log;
-
+    // 通过/usr/local/nginx/logs/nginx.pid 获取进行ID号
     file.fd = ngx_open_file(file.name.data, NGX_FILE_RDONLY,
                             NGX_FILE_OPEN, NGX_FILE_DEFAULT_ACCESS);
 
@@ -1127,7 +1135,7 @@ ngx_signal_process(ngx_cycle_t *cycle, char *sig)
                       n, buf, file.name.data);
         return 1;
     }
-
+    // 调用ngx_os_signal_process方法，处理真正的信号
     return ngx_os_signal_process(cycle, sig, pid);
 
 }
