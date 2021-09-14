@@ -458,14 +458,19 @@ ngx_show_version_info(void)
     }
 }
 
-
+/**
+ * 初始化socket端口监听，例如打开80端口监听
+ * Nginx支持热切换，为了保证切换之后的套接字不丢失，所以需要采用这一步添加继承的Socket套接字，套接字会放在NGINX的全局环境变量中
+ * 函数通过环境变量NGINX完成socket的继承，继承来的socket将会放到init_cycle的listening数组中
+ * 在NGINX环境变量中，每个socket中间用冒号或分号隔开。完成继承同时设置全局变量ngx_inherited为1
+ */ 
 static ngx_int_t
 ngx_add_inherited_sockets(ngx_cycle_t *cycle)
 {
     u_char           *p, *v, *inherited;
     ngx_int_t         s;
     ngx_listening_t  *ls;
-
+    // 获取宏环境变量NGINX的值    例如：# export NGINX="16000:16500:16600;"
     inherited = (u_char *) getenv(NGINX_VAR);
 
     if (inherited == NULL) {

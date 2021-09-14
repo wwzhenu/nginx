@@ -16,7 +16,7 @@
 typedef struct ngx_listening_s  ngx_listening_t;
 
 struct ngx_listening_s {
-    ngx_socket_t        fd;
+    ngx_socket_t        fd; // 文件描述符，即socket
 
     struct sockaddr    *sockaddr;
     socklen_t           socklen;    /* size of sockaddr */
@@ -25,9 +25,9 @@ struct ngx_listening_s {
 
     int                 type;
 
-    int                 backlog;
-    int                 rcvbuf;
-    int                 sndbuf;
+    int                 backlog; //日志
+    int                 rcvbuf; // 数据接收buffer
+    int                 sndbuf; // 数据发送的buffer
 #if (NGX_HAVE_KEEPALIVE_TUNABLE)
     int                 keepidle;
     int                 keepintvl;
@@ -35,7 +35,7 @@ struct ngx_listening_s {
 #endif
 
     /* handler of accepted connection */
-    ngx_connection_handler_pt   handler;
+    ngx_connection_handler_pt   handler; // 接收连接后的回调函数，回调方法：ngx_http_init_connection
 
     void               *servers;  /* array of ngx_http_in_addr_t, for example */
 
@@ -160,7 +160,7 @@ struct ngx_connection_s {
 
     ngx_buf_t          *buffer;
 
-    ngx_queue_t         queue;
+    ngx_queue_t         queue; // 用来将当前连接以双向链表元素的形式添加到ngx_cycle_t核心结构体的reuseable_connection_queue双向链表中，表示可以重用的连接
 
     ngx_atomic_uint_t   number;
 

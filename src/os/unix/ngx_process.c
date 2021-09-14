@@ -82,7 +82,9 @@ ngx_signal_t  signals[] = {
     { 0, NULL, "", NULL }
 };
 
-
+/**
+ * fork工作进程
+ */ 
 ngx_pid_t
 ngx_spawn_process(ngx_cycle_t *cycle, ngx_spawn_proc_pt proc, void *data,
     char *name, ngx_int_t respawn)
@@ -182,7 +184,7 @@ ngx_spawn_process(ngx_cycle_t *cycle, ngx_spawn_proc_pt proc, void *data,
 
     ngx_process_slot = s;
 
-
+    // fork一个子进程
     pid = fork();
 
     switch (pid) {
@@ -194,12 +196,15 @@ ngx_spawn_process(ngx_cycle_t *cycle, ngx_spawn_proc_pt proc, void *data,
         return NGX_INVALID_PID;
 
     case 0:
+        // 如果pid fork成功，则调用 ngx_worker_process_cycle方法
+        // 此为子进程空间
         ngx_parent = ngx_pid;
         ngx_pid = ngx_getpid();
         proc(cycle, data);
         break;
 
     default:
+        // 此为父进程空间
         break;
     }
 
@@ -637,6 +642,7 @@ ngx_os_signal_process(ngx_cycle_t *cycle, char *name, ngx_pid_t pid)
 
     for (sig = signals; sig->signo != 0; sig++) {
         if (ngx_strcmp(name, sig->name) == 0) {
+            // 通过系统调用向该进程发送信号
             if (kill(pid, sig->signo) != -1) {
                 return 0;
             }
