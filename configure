@@ -8,23 +8,30 @@ LC_ALL=C
 export LC_ALL
 
 # 引入定义文件
-. auto/options
-. auto/init
-. auto/sources
+. auto/options # 处理configure命令的参数，定义后续会使用到的变量
+. auto/init # 初始化之后将产生的文本路径
+. auto/sources # 用于分心Nginx的源码结构，用于构造后续的makefile文件等
 
+# 创建objs文件夹
 test -d $NGX_OBJS || mkdir -p $NGX_OBJS
 
+# 创建 objs/ngx_auto_headers.h
+# 创建 objs/autoconf.err
 echo > $NGX_AUTO_HEADERS_H
 echo > $NGX_AUTOCONF_ERR
 
+# 创建 objs/ngx_auto_config.h
+# 此时 $NGX_CONFIGURE 为空
 echo "#define NGX_CONFIGURE \"$NGX_CONFIGURE\"" > $NGX_AUTO_CONFIG_H
 
-
+# 若NGX_DEBUG=YES 向objs/ngx_auto_config.h写入DEBUG宏
 if [ $NGX_DEBUG = YES ]; then
-    have=NGX_DEBUG . auto/have
+    have=NGX_DEBUG 
+    . auto/have
 fi
 
-
+# 检查操作系统的参数
+# 可以在auto/options文件中定义NGX_PLATFORM跳过检查
 if test -z "$NGX_PLATFORM"; then
     echo "checking for OS"
 
@@ -47,12 +54,14 @@ else
     NGX_SYSTEM=$NGX_PLATFORM
 fi
 
+# 检查并设置编译器
 . auto/cc/conf
 
 if [ "$NGX_PLATFORM" != win32 ]; then
     . auto/headers
 fi
 
+# 定义一些对于当前操作系统的相关方法并检查当前环境是否支持
 . auto/os/conf
 
 if [ "$NGX_PLATFORM" != win32 ]; then
@@ -60,9 +69,12 @@ if [ "$NGX_PLATFORM" != win32 ]; then
 fi
 
 . auto/threads
+# 生成ngx_modules.c文件；event模式决策；定义modules数组
 . auto/modules
+# 检查需要连接的第三方静态库、动态库或是目标文件是否存在
 . auto/lib/conf
 
+# 处理Nginx安装后的路径
 case ".$NGX_PREFIX" in
     .)
         NGX_PREFIX=${NGX_PREFIX:-/usr/local/nginx}
@@ -104,11 +116,14 @@ have=NGX_HTTP_UWSGI_TEMP_PATH value="\"$NGX_HTTP_UWSGI_TEMP_PATH\""
 have=NGX_HTTP_SCGI_TEMP_PATH value="\"$NGX_HTTP_SCGI_TEMP_PATH\""
 . auto/define
 
+# 创建编译时使用的objs、Makefile文件
 . auto/make
+# 为objs、Makefile加入需要连接的静态库和第三方库等
 . auto/lib/make
+# 为objs、Makefile加入install
 . auto/install
 
-# STUB
+# STUB 在ngx_auto_config.h文件中加入NGX_SUPPRESS_WARN宏、NGX_SMP宏
 . auto/stubs
 
 have=NGX_USER value="\"$NGX_USER\"" . auto/define
@@ -117,5 +132,5 @@ have=NGX_GROUP value="\"$NGX_GROUP\"" . auto/define
 if [ ".$NGX_BUILD" != "." ]; then
     have=NGX_BUILD value="\"$NGX_BUILD\"" . auto/define
 fi
-
+# 显示configure执行结果，若失败给出原因
 . auto/summary
