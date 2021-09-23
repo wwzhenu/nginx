@@ -172,11 +172,13 @@ NGX_CPU_CACHE_LINE=
 NGX_POST_CONF_MSG=
 
 opt=
-
+# for option = for option in $@            $@表示命令行参数组成的数组
 for option
 do
+    # 如果参数没有与正则表达式相匹配，输出未匹配的这行内容  --help --prefix=abc  未匹配
+    # 如果参数与正则表达式匹配  --prefix="abc abc" 会替换为 --prefix='abc abc'
     opt="$opt `echo $option | sed -e \"s/\(--[^=]*=\)\(.* .*\)/\1'\2'/\"`"
-
+    # sed -e 's/[-_a-zA-Z0-9]*=//' 若参数为--xxx=xxx形式，则把--xxx=替换为空以获取值
     case "$option" in
         -*=*) value=`echo "$option" | sed -e 's/[-_a-zA-Z0-9]*=//'` ;;
            *) value="" ;;
